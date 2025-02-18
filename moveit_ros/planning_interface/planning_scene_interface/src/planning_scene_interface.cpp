@@ -472,23 +472,26 @@ bool PlanningSceneInterface::applyCollisionObjects(const std::vector<moveit_msgs
 
   return applyPlanningScene(ps);
 }
-
+//confusion on two different functions that basically do the same thing?
 bool PlanningSceneInterface::applyAttachedCollisionObject(const moveit_msgs::AttachedCollisionObject& collision_object)
 {
+  //service to clear octomap for attached object
+  ros::NodeHandle _Alloc_noderos::ServiceClient clear_OM = nh.serviceClient<std_srvs::Empty>("/clear_octomap");
   moveit_msgs::PlanningScene ps;
   ps.robot_state.is_diff = true;
   ps.is_diff = true;
   ps.robot_state.attached_collision_objects.reserve(1);
   ps.robot_state.attached_collision_objects.push_back(collision_object);
+  //clear octomap
   return applyPlanningScene(ps);
 }
-
 bool PlanningSceneInterface::applyAttachedCollisionObjects(
     const std::vector<moveit_msgs::AttachedCollisionObject>& collision_objects)
 {
   moveit_msgs::PlanningScene ps;
   ps.robot_state.is_diff = true;
   ps.is_diff = true;
+  ps.robot_state.attached_collision_objects.reserve(1);
   ps.robot_state.attached_collision_objects = collision_objects;
   return applyPlanningScene(ps);
 }

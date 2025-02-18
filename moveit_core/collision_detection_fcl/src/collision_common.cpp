@@ -68,14 +68,10 @@ bool collisionCallback(fcl::CollisionObjectd* o1, fcl::CollisionObjectd* o2, voi
   // If active components are specified
   if (cdata->active_components_only_)
   {
-    const moveit::core::LinkModel* l1 =
-        cd1->type == BodyTypes::ROBOT_LINK ?
-            cd1->ptr.link :
-            (cd1->type == BodyTypes::ROBOT_ATTACHED ? cd1->ptr.ab->getAttachedLink() : nullptr);
-    const moveit::core::LinkModel* l2 =
-        cd2->type == BodyTypes::ROBOT_LINK ?
-            cd2->ptr.link :
-            (cd2->type == BodyTypes::ROBOT_ATTACHED ? cd2->ptr.ab->getAttachedLink() : nullptr);
+    const moveit::core::LinkModel* l1 = (cd1->type == BodyTypes::ROBOT_LINK) ? cd1->ptr.link :
+                                        (cd1->type == BodyTypes::ROBOT_ATTACHED) ? cd1->ptr.ab->getAttachedLink() : nullptr;
+    const moveit::core::LinkModel* l2 = (cd2->type == BodyTypes::ROBOT_LINK) ? cd2->ptr.link :
+                                        (cd2->type == BodyTypes::ROBOT_ATTACHED) ? cd2->ptr.ab->getAttachedLink() : nullptr;
 
     // If neither of the involved components is active
     if ((!l1 || cdata->active_components_only_->find(l1) == cdata->active_components_only_->end()) &&
@@ -139,9 +135,8 @@ bool collisionCallback(fcl::CollisionObjectd* o1, fcl::CollisionObjectd* o2, voi
     }
   }
   // bodies attached to the same link should not collide
-  if (cd1->type == BodyTypes::ROBOT_ATTACHED && cd2->type == BodyTypes::ROBOT_ATTACHED)
+  if (cd1->type == BodyTypes::ROBOT_ATTACHED && cd2->type == BodyTypes::ROBOT_ATTACHED && cd1->ptr.ab->getAttachedLink() == cd2->ptr.ab->getAttachedLink())
   {
-    if (cd1->ptr.ab->getAttachedLink() == cd2->ptr.ab->getAttachedLink())
       always_allow_collision = true;
   }
 
@@ -155,8 +150,7 @@ bool collisionCallback(fcl::CollisionObjectd* o1, fcl::CollisionObjectd* o2, voi
 
   // see if we need to compute a contact
   std::size_t want_contact_count = 0;
-  if (cdata->req_->contacts)
-    if (cdata->res_->contact_count < cdata->req_->max_contacts)
+  if (cdata->req_->contacts && cdata->res_->contact_count < cdata->req_->max_contacts)
     {
       std::size_t have;
       if (cd1->getID() < cd2->getID())
@@ -268,7 +262,7 @@ bool collisionCallback(fcl::CollisionObjectd* o1, fcl::CollisionObjectd* o2, voi
           want_contact_count = 0;
         }
 
-        if (cdata->req_->verbose)
+        if (cdata->req_->verbose) //error message issue recieved
           ROS_INFO_NAMED("collision_detection.fcl",
                          "Found %d contacts between '%s' (type '%s') and '%s' (type '%s'), "
                          "which constitute a collision. %d contacts will be stored",
@@ -345,7 +339,7 @@ bool collisionCallback(fcl::CollisionObjectd* o1, fcl::CollisionObjectd* o2, voi
     {
       if (!cdata->req_->cost)
         cdata->done_ = true;
-      if (cdata->req_->verbose)
+      else if (cdata->req_->verbose)
         ROS_INFO_NAMED("collision_detection.fcl",
                        "Collision checking is considered complete (collision was found and %u contacts are stored)",
                        (unsigned int)cdata->res_->contact_count);
@@ -488,7 +482,7 @@ bool distanceCallback(fcl::CollisionObjectd* o1, fcl::CollisionObjectd* o2, void
   if (always_allow_collision)
   {
     return false;
-  }
+  } 
   if (cdata->req->verbose)
     ROS_DEBUG_NAMED("collision_detection.fcl", "Actually checking collisions between %s and %s", cd1->getID().c_str(),
                     cd2->getID().c_str());
